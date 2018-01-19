@@ -1,0 +1,41 @@
+set(CMAKE_AUTOMOC ON)
+
+if (STATIC_PLUGIN)
+    set (LIB_TYPE STATIC)
+else ()
+    set (LIB_TYPE SHARED)
+endif ()
+
+add_library(qgeoservices_wms ${LIB_TYPE}
+    qgeomapreplywmts.h
+    qgeomapreplywmts.cpp
+    qgeoserviceproviderpluginwmts.h
+    qgeoserviceproviderpluginwmts.cpp
+    qgeotiledmappingmanagerenginewmts.h
+    qgeotiledmappingmanagerenginewmts.cpp
+    qgeotilefetcherwmts.h
+    qgeotilefetcherwmts.cpp
+    qgeotileproviderwmts.h
+    qgeotileproviderwmts.cpp
+)
+
+target_include_directories(qgeoservices_wms
+PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    /usr/local/opt/qt/lib/QtPositioning.framework/Versions/5/Headers/5.10.0
+    /usr/local/opt/qt/lib/QtLocation.framework/Versions/5/Headers/5.10.0
+    /usr/local/opt/qt/lib/QtLocation.framework/Versions/5/Headers
+)
+
+if (STATIC_PLUGIN)
+    target_compile_definitions(qgeoservices_wms
+    PRIVATE
+        QT_STATICPLUGIN
+    )
+else ()
+    set_target_properties (qgeoservices_wms PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/geoservices)
+endif ()
+
+target_link_libraries(qgeoservices_wms Qt5::Gui Qt5::Location Qt5::Positioning)

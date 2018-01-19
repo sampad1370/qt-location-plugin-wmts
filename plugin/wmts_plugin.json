@@ -1,0 +1,9 @@
+{
+    "Keys": ["wmts"],
+    "Provider": "wmts",
+    "Version": 100,
+    "Experimental": false,
+    "Features": [
+        "OnlineMappingFeature"
+    ]
+}
