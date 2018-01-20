@@ -86,4 +86,10 @@ TEST_CASE("ParseServiceXml", "[parser]")
     REQUIRE(tileMatrix->tileWidth == 256);
     REQUIRE(tileMatrix->tileHeight == 256);
 }
+
+TEST_CASE("ConvertScaleToZoomLevel", "[conversion]")
+{
+    REQUIRE(wmts::scaleDenominatorToZoomLevel(559082264) == 0);
+    REQUIRE(wmts::scaleDenominatorToZoomLevel(533) == 20);
+}
 }

@@ -102,4 +102,5 @@ struct WmtsServiceDescription
 };
 
 WmtsServiceDescription parseServiceDescription(std::string_view data);
+int                    scaleDenominatorToZoomLevel(int scale);
 }

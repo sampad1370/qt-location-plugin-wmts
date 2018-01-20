@@ -1,5 +1,6 @@
 #include "serviceparser.h"
 
+#include <array>
 #include <cstdio>
 #include <iostream>
 #include <pugixml.hpp>
@@ -117,5 +118,39 @@ WmtsServiceDescription parseServiceDescription(std::string_view data)
     }
 
     return desc;
+}
+
+int scaleDenominatorToZoomLevel(int scale)
+{
+    static constexpr std::array<int, 21> lut{{
+        559'082'264,
+        279'541'132,
+        139'770'566,
+        69'885'283,
+        34'942'642,
+        17'471'321,
+        8'735'660,
+        4'367'830,
+        2'183'915,
+        1'091'958,
+        545'979,
+        272'989,
+        136'495,
+        68'247,
+        34'124,
+        17'062,
+        8'531,
+        4'265,
+        2'133,
+        1'066,
+        533,
+    }};
+
+    auto iter = std::find(begin(lut), end(lut), scale);
+    if (iter == end(lut)) {
+        return -1;
+    }
+
+    return int(std::distance(begin(lut), iter));
 }
 }
