@@ -1,5 +1,6 @@
 add_executable(wmtsplugintest
     serviceparsertest.cpp
+    data/servicedesc.xml
 )
 
 target_link_libraries(wmtsplugintest wmtslogic)

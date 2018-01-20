@@ -1,12 +1,14 @@
 #pragma once
 
+#include <cassert>
+#include <cinttypes>
 #include <string>
 #include <vector>
-#include <cinttypes>
 
 #include <string_view>
 
-namespace wmts {
+namespace wmts
+{
 
 struct Range
 {
@@ -23,62 +25,81 @@ struct Coordinate
 struct BoundingBox
 {
     std::string crs;
-    Coordinate lowerCorner;
-    Coordinate upperCorner;
+    Coordinate  lowerCorner;
+    Coordinate  upperCorner;
 };
 
 struct TileMatrixLimits
 {
-    int zoomLevel;
+    int   zoomLevel;
     Range rowRange;
     Range colRange;
 };
 
 struct TileMatrix
 {
-    int id;
-    double scaleDenominator;
-    Coordinate topLeftCorner;
-    int tileWidth;
-    int tileHeight;
-    int matrixWidth = 1;
-    int matrixHeight = 1;
+    std::string id;
+    double      scaleDenominator;
+    Coordinate  topLeftCorner;
+    int         tileWidth;
+    int         tileHeight;
+    int         matrixWidth  = 1;
+    int         matrixHeight = 1;
 };
 
 struct TileMatrixSet
 {
-    std::string name;
-    std::string supportedCrs;
-    BoundingBox bbox;
+    TileMatrix* getTileMatrix(std::string_view name)
+    {
+        auto iter = std::find_if(begin(tileMatrices), end(tileMatrices), [=](const auto& tm) {
+            return tm.id == name;
+        });
+
+        if (iter == end(tileMatrices))
+        {
+            return nullptr;
+        }
+
+        return &(*iter);
+    }
+
+    std::string             name;
+    std::string             supportedCrs;
+    BoundingBox             bbox;
     std::vector<TileMatrix> tileMatrices;
 };
 
 struct TileMatrixSetLink
 {
-    std::string tileMatrixSet;
-    int minZoomLevel;
-    int maxZoomLevel;
+    TileMatrixLimits& getTileMatrixLimits(int zoomLevel)
+    {
+        assert(zoomLevel >= minZoomLevel && zoomLevel <= maxZoomLevel);
+        return limits[zoomLevel - minZoomLevel];
+    }
+
+    std::string                   tileMatrixSet;
+    int                           minZoomLevel;
+    int                           maxZoomLevel;
     std::vector<TileMatrixLimits> limits;
 };
 
 struct Layer
 {
-    std::string name;
-    std::string description;
-    std::string format;
-    BoundingBox bbox;
-    std::vector<TileMatrixSetLink> tileMatrixSets;
+    std::string                    name;
+    std::string                    description;
+    std::string                    format;
+    BoundingBox                    bbox;
+    std::vector<TileMatrixSetLink> tileMatrixSetLinks;
 };
 
 struct WmtsServiceDescription
 {
     std::string version;
     std::string name;
-    
-    std::vector<Layer> layers;
+
+    std::vector<Layer>         layers;
     std::vector<TileMatrixSet> tilematrixSets;
 };
 
 WmtsServiceDescription parseServiceDescription(std::string_view data);
-
 }

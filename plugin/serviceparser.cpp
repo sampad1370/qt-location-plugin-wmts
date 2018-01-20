@@ -1,11 +1,12 @@
 #include "serviceparser.h"
 
-#include <pugixml.hpp>
-#include <sstream>
 #include <cstdio>
 #include <iostream>
+#include <pugixml.hpp>
+#include <sstream>
 
-namespace wmts {
+namespace wmts
+{
 
 using namespace pugi;
 
@@ -19,22 +20,22 @@ static Coordinate parseCoordinateNode(const xml_node& node)
 static Layer parseLayerNode(const xml_node& layerNode)
 {
     Layer layer;
-    layer.name = layerNode.child("ows:Title").child_value();
+    layer.name        = layerNode.child("ows:Title").child_value();
     layer.description = layerNode.child("ows:Abstract").child_value();
-    layer.format = layerNode.child("Format").child_value();
+    layer.format      = layerNode.child("Format").child_value();
 
-    auto bboxNode = layerNode.child("ows:WGS84BoundingBox");
+    auto bboxNode          = layerNode.child("ows:WGS84BoundingBox");
     layer.bbox.upperCorner = parseCoordinateNode(bboxNode.child("ows:UpperCorner"));
     layer.bbox.lowerCorner = parseCoordinateNode(bboxNode.child("ows:LowerCorner"));
-    layer.bbox.crs = "EPSG:4326";
+    layer.bbox.crs         = "EPSG:4326";
 
     for (auto& matrixSetLinkNode : layerNode.children("TileMatrixSetLink"))
     {
         TileMatrixSetLink matrixSetLink;
         matrixSetLink.tileMatrixSet = matrixSetLinkNode.child_value("TileMatrixSet");
-        matrixSetLink.minZoomLevel = std::numeric_limits<int>::max();
-        matrixSetLink.maxZoomLevel = std::numeric_limits<int>::lowest();
-        
+        matrixSetLink.minZoomLevel  = std::numeric_limits<int>::max();
+        matrixSetLink.maxZoomLevel  = std::numeric_limits<int>::lowest();
+
         for (auto& matrixSetLimitsNode : matrixSetLinkNode.child("TileMatrixSetLimits").children("TileMatrixLimits"))
         {
             TileMatrixLimits limits;
@@ -42,74 +43,74 @@ static Layer parseLayerNode(const xml_node& layerNode)
             {
                 limits.zoomLevel = -1;
             }
-            
-            limits.colRange.min = matrixSetLimitsNode.child("MinTileCol").first_child().text().as_int();
-            limits.colRange.max = matrixSetLimitsNode.child("MaxTileCol").first_child().text().as_int();
-            limits.rowRange.min = matrixSetLimitsNode.child("MinTileRow").first_child().text().as_int();
-            limits.rowRange.max = matrixSetLimitsNode.child("MaxTileRow").first_child().text().as_int();
+
+            limits.colRange.min        = matrixSetLimitsNode.child("MinTileCol").first_child().text().as_int();
+            limits.colRange.max        = matrixSetLimitsNode.child("MaxTileCol").first_child().text().as_int();
+            limits.rowRange.min        = matrixSetLimitsNode.child("MinTileRow").first_child().text().as_int();
+            limits.rowRange.max        = matrixSetLimitsNode.child("MaxTileRow").first_child().text().as_int();
             matrixSetLink.minZoomLevel = std::min(matrixSetLink.minZoomLevel, limits.zoomLevel);
             matrixSetLink.maxZoomLevel = std::max(matrixSetLink.maxZoomLevel, limits.zoomLevel);
             matrixSetLink.limits.push_back(limits);
         }
-        
-        std::sort(begin(matrixSetLink.limits), end(matrixSetLink.limits), [] (const auto& l1, const auto& l2) {
+
+        std::sort(begin(matrixSetLink.limits), end(matrixSetLink.limits), [](const auto& l1, const auto& l2) {
             return l1.zoomLevel < l2.zoomLevel;
         });
-        
-        layer.tileMatrixSets.emplace_back(std::move(matrixSetLink));
+
+        layer.tileMatrixSetLinks.emplace_back(std::move(matrixSetLink));
     }
-    
+
     return layer;
 }
 
 static TileMatrixSet parseMatrixSetNode(const xml_node& matrixSetNode)
 {
     TileMatrixSet matrixSet;
-    matrixSet.name = matrixSetNode.child_value("ows::Identifier");
-    matrixSet.supportedCrs = matrixSetNode.child_value("ows::SupportedCRS");
+    matrixSet.name         = matrixSetNode.child_value("ows:Identifier");
+    matrixSet.supportedCrs = matrixSetNode.child_value("ows:SupportedCRS");
 
-    auto bboxNode = matrixSetNode.child("ows:BoundingBox");
+    auto bboxNode              = matrixSetNode.child("ows:BoundingBox");
     matrixSet.bbox.upperCorner = parseCoordinateNode(bboxNode.child("ows:UpperCorner"));
     matrixSet.bbox.lowerCorner = parseCoordinateNode(bboxNode.child("ows:LowerCorner"));
-    matrixSet.bbox.crs = matrixSetNode.attribute("crs").as_string();
+    matrixSet.bbox.crs         = bboxNode.attribute("crs").as_string();
 
-    for (auto& matrixNode : matrixSetNode.child("TileMatrix"))
+    for (auto& matrixNode : matrixSetNode.children("TileMatrix"))
     {
         TileMatrix matrix;
-        matrix.id = std::atoi(matrixNode.child_value("ows::Identifier"));
+        matrix.id               = matrixNode.child_value("ows:Identifier");
         matrix.scaleDenominator = std::atof(matrixNode.child_value("ScaleDenominator"));
-        matrix.tileWidth = std::atoi(matrixNode.child_value("TileWidth"));
-        matrix.tileHeight = std::atoi(matrixNode.child_value("TileHeight"));
-        matrix.matrixWidth = std::atoi(matrixNode.child_value("MatrixWidth"));
-        matrix.matrixHeight = std::atoi(matrixNode.child_value("MatrixHeight"));
-        matrix.topLeftCorner = parseCoordinateNode(bboxNode.child("TopLeftCorner"));
-       
+        matrix.tileWidth        = std::atoi(matrixNode.child_value("TileWidth"));
+        matrix.tileHeight       = std::atoi(matrixNode.child_value("TileHeight"));
+        matrix.matrixWidth      = std::atoi(matrixNode.child_value("MatrixWidth"));
+        matrix.matrixHeight     = std::atoi(matrixNode.child_value("MatrixHeight"));
+        matrix.topLeftCorner    = parseCoordinateNode(matrixNode.child("TopLeftCorner"));
+
         matrixSet.tileMatrices.emplace_back(std::move(matrix));
     }
-    
+
     return matrixSet;
 }
 
 WmtsServiceDescription parseServiceDescription(std::string_view data)
 {
     WmtsServiceDescription desc;
-    
+
     xml_document doc;
-    auto res = doc.load_buffer(data.data(), data.size());
-    if (res.status != xml_parse_status::status_ok) {
+    if (doc.load_buffer(data.data(), data.size()).status != xml_parse_status::status_ok)
+    {
         throw std::runtime_error("Failed to parse wmts service description");
     }
 
-    auto caps = doc.child("Capabilities");
+    auto caps    = doc.child("Capabilities");
     desc.version = caps.attribute("version").as_string();
-    desc.name = caps.child("ows:ServiceIdentification").child("ows:Title").child_value();
-    
+    desc.name    = caps.child("ows:ServiceIdentification").child("ows:Title").child_value();
+
     auto contents = caps.child("Contents");
     for (auto& layerNode : contents.children("Layer"))
     {
         desc.layers.emplace_back(parseLayerNode(layerNode));
     }
-    
+
     for (auto& matrixSetNode : contents.children("TileMatrixSet"))
     {
         desc.tilematrixSets.emplace_back(parseMatrixSetNode(matrixSetNode));
@@ -117,5 +118,4 @@ WmtsServiceDescription parseServiceDescription(std::string_view data)
 
     return desc;
 }
-
 }

@@ -1,0 +1,16 @@
+{
+    "cmake.buildDirectory": "${workspaceRoot}/build/doozy-clang",
+    "cmake.configureSettings": {
+        "CMAKE_PREFIX_PATH": "/usr/local/opt/qt"
+    },
+    "cmake.installPrefix": "${workspaceRoot}/build/local",
+    "files.associations": {
+        "*.ipp": "cpp"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/build/*": false
+    },
+    "C_Cpp.loggingLevel": "Information"
+}
