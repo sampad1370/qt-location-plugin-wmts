@@ -11,8 +11,12 @@ PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
-target_link_libraries(wmtsdemo qgeoservices_wms Qt5::Gui Qt5::QuickControls2)
+target_link_libraries(wmtsdemo Qt5::Gui Qt5::QuickControls2 Qt5::Location)
 set_target_properties(wmtsdemo PROPERTIES AUTOMOC ON)
+
+if (STATIC_PLUGIN)
+    target_link_libraries(wmtsdemo qgeoservices_wmts)
+endif ()
 
 if (MSVC)
     set_target_properties(wmtsdemo PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup")

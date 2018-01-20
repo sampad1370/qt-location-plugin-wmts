@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(PACKAGE "qtlocation-plugin-wms")
+set(PACKAGE "qtlocation-plugin-wmts")
 set(PACKAGE_VERSION_MAJOR 0)
 set(PACKAGE_VERSION_MINOR 1)
 set(PACKAGE_VERSION_REVISION 0)
