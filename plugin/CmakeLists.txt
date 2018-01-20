@@ -1,10 +1,25 @@
-set(CMAKE_AUTOMOC ON)
-
 if (STATIC_PLUGIN)
     set (LIB_TYPE STATIC)
 else ()
     set (LIB_TYPE SHARED)
 endif ()
+
+add_library(wmtslogic STATIC
+    serviceparser.h
+    serviceparser.cpp
+    thirdparty/pugixml.cpp
+)
+
+target_include_directories(wmtslogic
+PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+target_include_directories(wmtslogic SYSTEM
+PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty>
+)
+
 
 add_library(qgeoservices_wmts ${LIB_TYPE}
     qgeomapreplywmts.h
@@ -24,10 +39,15 @@ PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+)
+
+target_include_directories(qgeoservices_wmts SYSTEM
+PRIVATE
     /usr/local/opt/qt/lib/QtPositioning.framework/Versions/5/Headers/5.10.0
     /usr/local/opt/qt/lib/QtLocation.framework/Versions/5/Headers/5.10.0
     /usr/local/opt/qt/lib/QtLocation.framework/Versions/5/Headers
 )
+
 
 if (STATIC_PLUGIN)
     target_compile_definitions(qgeoservices_wmts
@@ -44,7 +64,7 @@ else ()
     endif ()
 endif()
 
-get_target_property(OUTPUT_DIR qgeoservices_wmts LIBRARY_OUTPUT_DIRECTORY)
-message(STATUS "Gen: ${OUTPUT_DIR}")
+target_link_libraries(qgeoservices_wmts wmtslogic Qt5::Gui Qt5::Location Qt5::Positioning)
+set_target_properties (qgeoservices_wmts PROPERTIES AUTOMOC ON)
 
-target_link_libraries(qgeoservices_wmts Qt5::Gui Qt5::Location Qt5::Positioning)
+add_subdirectory(test)
