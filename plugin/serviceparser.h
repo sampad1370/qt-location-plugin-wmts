@@ -49,20 +49,9 @@ struct TileMatrix
 
 struct TileMatrixSet
 {
-    TileMatrix* getTileMatrix(std::string_view name)
-    {
-        auto iter = std::find_if(begin(tileMatrices), end(tileMatrices), [=](const auto& tm) {
-            return tm.id == name;
-        });
-
-        if (iter == end(tileMatrices))
-        {
-            return nullptr;
-        }
-
-        return &(*iter);
-    }
-
+    TileMatrix* tileMatrixWithId(std::string_view name);
+    TileMatrix* tileMatrixWithZoomLevel(int zoomLevel);
+    
     std::string             name;
     std::string             supportedCrs;
     BoundingBox             bbox;
@@ -88,6 +77,8 @@ struct Layer
     std::string                    name;
     std::string                    description;
     std::string                    format;
+    std::string                    defaultStyle;
+    std::vector<std::string>       styles;
     BoundingBox                    bbox;
     std::vector<TileMatrixSetLink> tileMatrixSetLinks;
 };

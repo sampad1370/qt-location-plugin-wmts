@@ -27,10 +27,11 @@ TEST_CASE("ParseServiceXml", "[parser]")
     auto layer = serviceDesc.layers.front();
     REQUIRE(layer.bbox.lowerCorner.longitude == Approx(2.53));
     REQUIRE(layer.bbox.lowerCorner.latitude == Approx(50.685));
-
     REQUIRE(layer.bbox.upperCorner.longitude == Approx(5.92));
     REQUIRE(layer.bbox.upperCorner.latitude == Approx(51.52));
 
+    REQUIRE(layer.defaultStyle == "GRB-Basiskaart");
+    REQUIRE(layer.styles == std::vector<std::string>{"GRB-Basiskaart"});
     REQUIRE(layer.tileMatrixSetLinks.size() == 3);
 
     auto matrixSetLink = layer.tileMatrixSetLinks.front();
@@ -64,7 +65,7 @@ TEST_CASE("ParseServiceXml", "[parser]")
     REQUIRE(matrixSet.bbox.upperCorner.latitude == Approx(20037508.342789));
     REQUIRE(matrixSet.tileMatrices.size() == 22);
 
-    auto* tileMatrix = matrixSet.getTileMatrix("0");
+    auto* tileMatrix = matrixSet.tileMatrixWithId("0");
     REQUIRE_FALSE(tileMatrix == nullptr);
     REQUIRE(tileMatrix->id == "0");
     REQUIRE(tileMatrix->scaleDenominator == Approx(559082264.02871787548065185547));
@@ -75,7 +76,7 @@ TEST_CASE("ParseServiceXml", "[parser]")
     REQUIRE(tileMatrix->tileWidth == 256);
     REQUIRE(tileMatrix->tileHeight == 256);
 
-    tileMatrix = matrixSet.getTileMatrix("21");
+    tileMatrix = matrixSet.tileMatrixWithId("21");
     REQUIRE_FALSE(tileMatrix == nullptr);
     REQUIRE(tileMatrix->id == "21");
     REQUIRE(tileMatrix->scaleDenominator == Approx(266.59119798122287647857));
@@ -85,6 +86,8 @@ TEST_CASE("ParseServiceXml", "[parser]")
     REQUIRE(tileMatrix->matrixHeight == 2097152);
     REQUIRE(tileMatrix->tileWidth == 256);
     REQUIRE(tileMatrix->tileHeight == 256);
+    
+    REQUIRE(matrixSet.tileMatrixWithId("21") == matrixSet.tileMatrixWithZoomLevel(21));
 }
 
 TEST_CASE("ConvertScaleToZoomLevel", "[conversion]")

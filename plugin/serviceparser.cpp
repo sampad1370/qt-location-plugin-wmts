@@ -11,6 +11,32 @@ namespace wmts
 
 using namespace pugi;
 
+static constexpr std::array<int, 23> s_zoomLevelLut{{
+    559'082'264,
+    279'541'132,
+    139'770'566,
+    69'885'283,
+    34'942'642,
+    17'471'321,
+    8'735'660,
+    4'367'830,
+    2'183'915,
+    1'091'958,
+    545'979,
+    272'989,
+    136'495,
+    68'247,
+    34'124,
+    17'062,
+    8'531,
+    4'265,
+    2'133,
+    1'066,
+    533,
+    266,
+    133
+}};
+
 static Coordinate parseCoordinateNode(const xml_node& node)
 {
     Coordinate coord;
@@ -29,6 +55,15 @@ static Layer parseLayerNode(const xml_node& layerNode)
     layer.bbox.upperCorner = parseCoordinateNode(bboxNode.child("ows:UpperCorner"));
     layer.bbox.lowerCorner = parseCoordinateNode(bboxNode.child("ows:LowerCorner"));
     layer.bbox.crs         = "EPSG:4326";
+    
+    for (auto& styleNode : layerNode.children("Style"))
+    {
+        layer.styles.emplace_back(styleNode.child_value("ows:Title"));
+        if (styleNode.attribute("isDefault").as_bool())
+        {
+            layer.defaultStyle = layer.styles.back();
+        }
+    }
 
     for (auto& matrixSetLinkNode : layerNode.children("TileMatrixSetLink"))
     {
@@ -120,37 +155,48 @@ WmtsServiceDescription parseServiceDescription(std::string_view data)
     return desc;
 }
 
+TileMatrix* TileMatrixSet::tileMatrixWithId(std::string_view name)
+{
+    auto iter = std::find_if(begin(tileMatrices), end(tileMatrices), [=](const auto& tm) {
+        return tm.id == name;
+    });
+
+    if (iter == end(tileMatrices))
+    {
+        return nullptr;
+    }
+
+    return &(*iter);
+}
+
+TileMatrix* TileMatrixSet::tileMatrixWithZoomLevel(int zoomLevel)
+{
+    if (zoomLevel >= int(s_zoomLevelLut.size()))
+    {
+        return nullptr;
+    }
+
+    int scale = s_zoomLevelLut[zoomLevel];
+    auto iter = std::find_if(begin(tileMatrices), end(tileMatrices), [scale](const auto& tm) {
+        return int(tm.scaleDenominator) == scale;
+    });
+
+    if (iter == end(tileMatrices))
+    {
+        return nullptr;
+    }
+
+    return &(*iter);
+}
+
+
 int scaleDenominatorToZoomLevel(int scale)
 {
-    static constexpr std::array<int, 21> lut{{
-        559'082'264,
-        279'541'132,
-        139'770'566,
-        69'885'283,
-        34'942'642,
-        17'471'321,
-        8'735'660,
-        4'367'830,
-        2'183'915,
-        1'091'958,
-        545'979,
-        272'989,
-        136'495,
-        68'247,
-        34'124,
-        17'062,
-        8'531,
-        4'265,
-        2'133,
-        1'066,
-        533,
-    }};
-
-    auto iter = std::find(begin(lut), end(lut), scale);
-    if (iter == end(lut)) {
+    auto iter = std::find(begin(s_zoomLevelLut), end(s_zoomLevelLut), scale);
+    if (iter == end(s_zoomLevelLut)) {
         return -1;
     }
 
-    return int(std::distance(begin(lut), iter));
+    return int(std::distance(begin(s_zoomLevelLut), iter));
 }
 }
