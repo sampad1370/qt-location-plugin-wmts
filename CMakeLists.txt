@@ -60,6 +60,7 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     find_package(Qt5Positioning CONFIG REQUIRED)
     find_package(Qt5Quick CONFIG REQUIRED)
     find_package(Qt5QuickControls2 CONFIG REQUIRED)
+	find_package(Qt5Charts CONFIG REQUIRED)
 endif ()
 
 if (MSVC)

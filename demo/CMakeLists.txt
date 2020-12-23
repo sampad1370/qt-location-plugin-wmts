@@ -11,7 +11,7 @@ PRIVATE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
-target_link_libraries(wmtsdemo Qt5::Gui Qt5::QuickControls2 Qt5::Location)
+target_link_libraries(wmtsdemo Qt5::Gui Qt5::QuickControls2 Qt5::Location Qt5::Charts Qt5::LocationPrivate)
 set_target_properties(wmtsdemo PROPERTIES AUTOMOC ON)
 
 if (STATIC_PLUGIN)

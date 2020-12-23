@@ -64,7 +64,7 @@ else ()
     endif ()
 endif()
 
-target_link_libraries(qgeoservices_wmts wmtslogic Qt5::Gui Qt5::Location Qt5::Positioning)
+target_link_libraries(qgeoservices_wmts wmtslogic Qt5::Gui Qt5::Location Qt5::Positioning Qt5::LocationPrivate)
 set_target_properties (qgeoservices_wmts PROPERTIES AUTOMOC ON)
 
 add_subdirectory(test)
